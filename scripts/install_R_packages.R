@@ -44,9 +44,14 @@ usePackage <- function(pkgs, gitLink, lib.personal,
         if(!all(ind.bioc)){
             cat("packages: ", pkgs[["bioconductor"]][!ind.bioc],
                 "are installing \n")
-            source("https://bioconductor.org/biocLite.R")
-            biocLite(pkgs[["bioconductor"]][!ind.bioc], suppressUpdates = TRUE,
-                     lib = lib.personal)
+            ## source("https://bioconductor.org/biocLite.R")
+            ## biocLite(pkgs[["bioconductor"]][!ind.bioc], suppressUpdates = TRUE,
+            ##          lib = lib.personal)
+            if (!requireNamespace("BiocManager", quietly = TRUE))
+                install.packages("BiocManager", suppressUpdates = TRUE,
+                                 lib = lib.personal,
+                                 repos = defaultCRANmirror, quiet = TRUE)
+            BiocManager::install(pkgs[["bioconductor"]][!ind.bioc])
         }
     }
     

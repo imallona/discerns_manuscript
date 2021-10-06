@@ -11,29 +11,28 @@ import os.path as op
 
 configfile: "config.yaml"
 
-print(config)
+# print(config)
 
 WD = config['WD']
-FASTERQDUMP = '/home/imallona/soft/sra-tools/sratoolkit.2.11.1-ubuntu64/bin/fasterq-dump'
 GTF = op.basename(config['gtf_url'])
 GENOME = op.basename(config['genome_url'])
 
 include: op.join("rules", "rsem_simulation.smk")
 include: op.join('rules', 'further_soft_installs.snmk')
-include: "rules/reduce_GTF.smk"
-include: "rules/mapping_comparison.smk"
-include: "rules/mapping.smk"
-include: "rules/predict_novel_splicing_events.smk"
+# include: "rules/reduce_GTF.smk"
+# include: "rules/mapping_comparison.smk"
+# include: "rules/mapping.smk"
+# include: "rules/predict_novel_splicing_events.smk"
 # include: "rules/quantification.smk"
-include: "rules/mapping_real_data.smk"
+# include: "rules/mapping_real_data.smk"
+
+print(config['gtf'])
+print(config['RSEMREF'])
 
 rule all:
     input:
-        op.join(WD, 'real_data', config['SRR'] + '_1.fastq.gz'),
-        op.join(WD, 'real_data', config['SRR'] + '_2.fastq.gz'),
-        op.join(WD, 'annotation', op.basename(GTF)),
-        op.join(WD, 'genome', op.basename(GENOME)),
-        expand("simulation/analysis/removed_exon_truth/{removed_exon}_truth.txt", removed_exon = config["reduced_exons"])
+        'Rout/R_packages_install_state.txt',
+        config["RSEMREF"] + ".n2g.idx.fa"
 
 # TODO chunk 1 start ---------------------        
 rule get_srr:
@@ -50,7 +49,7 @@ rule get_srr:
     shell:
         """
         mkdir -p {params.path}
-        {FASTERQDUMP} {params.srr} &> {log}
+        fasterqdump {params.srr} &> {log}
         pigz --keep {output.one_un}
         pigz --keep {output.two_un}
         """
@@ -62,7 +61,9 @@ rule get_GTF:
         path = op.join(WD, 'annotation'),
         gtf_url = config['gtf_url']
     log:
-        op.join(WD, 'annotation', GTF + '_retrieval.log')
+        op.join('logs', GTF + '_retrieval.log')
+    threads:
+        1
     shell:
         """
         mkdir -p {params.path}
@@ -72,21 +73,28 @@ rule get_GTF:
 
 rule get_genome:
     output:
-        op.join(WD, 'genome', op.basename(GENOME))
+        gz = op.join(WD, 'genome', op.basename(GENOME)),
+        uncomp = temp(op.join(WD, 'genome', op.splitext(op.basename(GENOME))[0])),        
     params:
         path = op.join(WD, 'genome'),
-        gtf_url = config['gtf_url']
+        genome_url = config['genome_url']
     log:
-        op.join(WD, 'genome', GTF + '_retrieval.log')
+        op.join('logs', 'genome', GTF + '_retrieval.log')
+    threads:
+        5
     shell:
         """
         mkdir -p {params.path}
         
-        wget {params.gtf_url} -O {output} &> {log}
+        wget {params.genome_url} -O {output.gz} &> {log}
+
+        ## chrfy-it
+        pigz -p {threads} --uncompress {output.gz}
+        sed -i 's/>/>chr/g' {output.uncomp}
+        pigz -p {threads} --compress --keep {output.uncomp}
+        
         """
-
-## --- till here
-
+        
 ## Install the required R packages into the environment     
 rule R_env_install:
     input:
@@ -98,6 +106,8 @@ rule R_env_install:
     conda:
         # "envs/r_scripts.yaml"
         "envs/discerns_env.yaml"
+    threads:
+        1
     shell:
         '''R CMD BATCH --no-restore --no-save "--args outtxt='{output}' " {input.script} {log}'''
 
@@ -109,11 +119,11 @@ rule R_env_install:
 
 ##################
 
-# rule run_RSEM_simulation:
-#     input:
-#         expand("simulation/simulated_data/simulated_reads_{nr}.fq", nr = [1,2]),
-#         expand("simulation/{samplename}.stat/{samplename}.model", samplename = config["SAMPLENAME"])
- 
+rule run_RSEM_simulation:
+    input:
+        expand("simulation/simulated_data/simulated_reads_chr19_22_{nr}.fq", nr = [1,2]),
+        expand("simulation/{samplename}.stat/{samplename}.model", samplename = config["SAMPLENAME"])
+        
 
 
 ##################
@@ -139,11 +149,11 @@ rule count_reduced_GTF:
 ##################
 rule run_fastqc:
     input:
-        fastq1 = "simulation/simulated_data/simulated_reads_1.fq",
-        fastq2 = "simulation/simulated_data/simulated_reads_2.fq"
+        fastq1 = "simulation/simulated_data/simulated_reads_chr19_22_1.fq",
+        fastq2 = "simulation/simulated_data/simulated_reads_chr19_22_2.fq"
     output:
-        "simulation/fastqc/simulated_reads_1_fastqc.html",
-        "simulation/fastqc/simulated_reads_2_fastqc.html"
+        "simulation/fastqc/simulated_reads_chr19_22_1_fastqc.html",
+        "simulation/fastqc/simulated_reads_chr19_22_2_fastqc.html"
     shell:
         "fastqc -o simlation/fastqc/ {input.fastq1} {input.fastq2}"
 
@@ -157,14 +167,17 @@ rule run_fastqc:
 
 rule run_star:
     input:
-        expand("reference/STAR/chr_all/{which_reduced_gtf}/Genome", which_reduced_gtf = config["reduced_gtf"]),
+        expand("reference/STAR/chr19_22/{which_reduced_gtf}/Genome", which_reduced_gtf = config["reduced_gtf"]),
         expand("simulation/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/pass2_SJ.out.tab", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"]),
         expand("simulation/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/pass2_Aligned.out_s.bam.bai", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"])
 
+        # expand("simulation/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/{bam_name}_s.bam.bai", which_reduced_gtf = "me_exon",
+        # test_dirnames = "outSJfilterDistToOtherSJmin0_outSJfilterOverhangMin6", bam_name = ["Aligned.out", "pass2_Aligned.out"])
+
 rule run_hisat2:
     input:
-        expand("reference/hisat2/chr_all/{which_reduced_gtf}/{which_reduced_gtf}_GRCh37.85.1.ht2", which_reduced_gtf = config["reduced_gtf"]),
-        expand("reference/hisat2/chr_all/{which_reduced_gtf}/{which_reduced_gtf}_GRCh37.85.1.ht2", which_reduced_gtf = config["reduced_gtf"],),
+        expand("reference/hisat2/chr19_22/{which_reduced_gtf}/{which_reduced_gtf}_GRCh37.85_chr19_22.1.ht2", which_reduced_gtf = config["reduced_gtf"]),
+        expand("reference/hisat2/chr19_22/{which_reduced_gtf}/{which_reduced_gtf}_GRCh37.85_chr19_22.1.ht2", which_reduced_gtf = config["reduced_gtf"],),
         expand("simulation/mapping/hisat2/{which_reduced_gtf}/{bam_name}_s.bam.bai", which_reduced_gtf = config["reduced_gtf"], bam_name = "hisat2")
 
 rule run_tophat2:
@@ -185,7 +198,7 @@ rule run_featureCounts:
 
 rule run_EQP:
     input:
-         expand("simulation/quantification/EQP/{which_reduced_gtf}/{test_dirnames}/pass2_Aligned.out_s-exon.cnt", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"])
+        expand("simulation/quantification/EQP/{which_reduced_gtf}/{test_dirnames}/pass2_Aligned.out_s-exon.cnt", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"])
 
 rule run_Salmon_derived_counts:
     input:
@@ -237,7 +250,7 @@ rule mapped_truth_sj_comparison:
 
 rule map_real_data:
     input:
-        expand("SRR3192428/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/{bam_name}_s.bam.bai", which_reduced_gtf = config["reduced_gtf"], test_dirnames = "default", bam_name = "pass2_Aligned.out"),
+        expand("SRR3192428/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/{bam_name}_chr19_22_s.bam.bai", which_reduced_gtf = config["reduced_gtf"], test_dirnames = "default", bam_name = "pass2_Aligned.out"),
         expand("SRR3192428/mapping/hisat2/{which_reduced_gtf}/hisat2_s.bam.bai", which_reduced_gtf = config["reduced_gtf"] )
 
 
@@ -254,7 +267,7 @@ rule predict_exons:
 
 rule run_extend_gtf:
     input: 
-        expand("simulation/reduced_GTF_with_predicted_exons/{exon_pred_dir}/{which_reduced_gtf}/GRCh37.85_novel_exons_{test_dirnames}.gtf", exon_pred_dir = "package", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"])
+        expand("simulation/reduced_GTF_with_predicted_exons/{exon_pred_dir}/{which_reduced_gtf}/GRCh37.85_chr19_22_novel_exons_{test_dirnames}.gtf", exon_pred_dir = "package", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"])
 
 
 rule make_PR_curves:
@@ -263,7 +276,7 @@ rule make_PR_curves:
 
 rule write_predicted_fasta:
     input:
-        expand("simulation/transcriptome/{which_reduced_gtf}/GRCh37.85_novel_exons_{test_dirnames}.fasta", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"] )
+        expand("simulation/transcriptome/{which_reduced_gtf}/GRCh37.85_chr19_22_novel_exons_{test_dirnames}.fasta", which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"] )
 
 rule run_gffcompare:
     input:
@@ -285,7 +298,7 @@ rule run_stringtie:
 rule stringtie_PR_curves:
     input:
         expand("simulation/analysis/stringtie/PR/{which_reduced_gtf}/{stringtie_param}/{test_dirnames}/PR_class_expr.pdf", which_reduced_gtf = config["reduced_gtf"], stringtie_param = config["stringtie_param"], test_dirnames = "outSJfilterOverhangMin6")
-            #test_dirnames = config["star_param"])
+        #test_dirnames = config["star_param"])
 
 rule run_gffcompare_stringtie:
     input:
