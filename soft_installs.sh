@@ -77,6 +77,8 @@ mamba install bedtools -c bioconda
 
 # EQP end
 
+mamba install stringtie salmon -c bioconda
+
 conda env export > discerns_env.yaml
 conda env export -n tophat_discerns_py27 > tophat_discerns_py27.yaml
 

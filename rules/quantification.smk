@@ -100,7 +100,6 @@ rule EQP_setup:
 # --unambig: count only reads that can be assigned unambiguously to a single gene or exon when creating the gene or exon counts
 # --unweighted: do not use read weights in the generation of counts
 # --nosort: the alignment file is already sorted by names; do not sort it
-
 rule EQP_exon_quantification:
     input:
         config["eqp_setup"] + "/{which_reduced_gtf}/{test_dirnames}/map-files/GRCh37.85_chr19_22_novel_exons_{test_dirnames}_exon_junction.map.gz",  ## to make sure that the setup completed successfully

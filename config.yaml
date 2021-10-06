@@ -6,7 +6,8 @@ WD: "/home/imallona/discerns_manuscript"
 
 ## hardcoded dependencies (?)
 # Izskun 06 Oct 2021: installed within conda
-hisat2_dir: /home/kathi/software/hisat2-2.1.0/
+# hisat2_dir: /home/kathi/software/hisat2-2.1.0/
+hisat2_dir: /home/imallona/miniconda3/envs/discerns_env/bin
 
 ##directory with the EQP scripts
 # Izskun 06 Oct 2021: installed locally
@@ -39,9 +40,6 @@ RSEMREF: "reference/RSEM/hg38" # <- ??
 ## name of the RNA-seq sample
 REALSAMPLE: "real_data/"
 
-## <- checked till here ->
-
-
 
 ## theta paramter for rsem-simulate-reads
 ## This parameter determines the fraction of reads  that  are  coming  from  background  "noise"  (instead  of  from  a transcript)
@@ -56,10 +54,10 @@ N_READS: 40000000
 ## 8306564 = number of reads = [348875684]/4*{1500+500}/(21000)        [lines in real fastq data] {genes in chr19 + chr22} / (total genes)
 
 ## seed for rsem-simulate-reads
-SEED: 584
+SEED: 224
 
 ## R setup
-Rbin: "/usr/local/R/R-4.1.0/bin/R"
+Rbin: "R"
 
 # ## Gene annotation file
 # ##--------------------------------------------------------------------------------------------
@@ -72,17 +70,37 @@ gtf : "annotation/gencode.v38.basic.annotation.gtf.gz"
 genome:
     "genome/reference/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
 
-# chromosomes:
-#     - 19
-#     - 22
+chromosomes:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
 
 simulation_name: simulate_reads
 
 ## gtf files with removed mes / exons
 reduced_gtf:
-    me: "simulation/reduced_GTF/GRCh37.85_reduced_me.gtf"
-    exon: "simulation/reduced_GTF/GRCh37.85_reduced_exon.gtf"
-    me_exon: "simulation/reduced_GTF/GRCh37.85_reduced_me_exon.gtf"
+    me: "simulation/reduced_GTF/gencode.v38.basic_me.gtf"
+    exon: "simulation/reduced_GTF/gencode.v38.basic_exon.gtf"
+    me_exon: "simulation/reduced_GTF/gencode.v38.basic_me_exon.gtf"
 
 ## gtf files of the removed mes / exons
 reduced_exons:
