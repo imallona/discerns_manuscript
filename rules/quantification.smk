@@ -71,7 +71,8 @@ rule derived_Salmon_counts:
 ## Rules for the exon quantification with EQP and featureCounts
 rule EQP_setup:
     input:
-        gtf = "simulation/reduced_GTF_with_predicted_exons/{which_reduced_gtf}/GRCh37.85_chr19_22_novel_exons_{test_dirnames}.gtf"
+        gtf = "simulation/reduced_GTF_with_predicted_exons/{which_reduced_gtf}/GRCh37.85_chr19_22_novel_exons_{test_dirnames}.gtf",
+        op.join('third_party', 'EQP-QM', 'eqp-setup.sh')
     output:
         config["eqp_setup"] + "/{which_reduced_gtf}/{test_dirnames}/map-files/GRCh37.85_chr19_22_novel_exons_{test_dirnames}_exon_junction.map.gz",
         setup_dir = config["eqp_setup"] + "/{which_reduced_gtf}/{test_dirnames}"

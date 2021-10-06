@@ -14,10 +14,14 @@ configfile: "config.yaml"
 print(config)
 
 WD = config['WD']
-FASTERQDUMP = '~/soft/sra-tools/sratoolkit.2.11.1-ubuntu64/bin/fasterq-dump'
+FASTERQDUMP = '/home/imallona/soft/sra-tools/sratoolkit.2.11.1-ubuntu64/bin/fasterq-dump'
 GTF = op.basename(config['gtf_url'])
+GENOME = op.basename(config['genome_url'])
 
-# include: "rules/rsem_simulation.smk"
+include: op.join("rules", "rsem_simulation.smk")
+include: op.join('rules', 'further_soft_installs.snmk')
+# include: op.join('rules', 'quantification.smk')
+
 # include: "rules/reduce_GTF.smk"
 # include: "rules/mapping_comparison.smk"
 # include: "rules/mapping.smk"
@@ -27,41 +31,74 @@ GTF = op.basename(config['gtf_url'])
 
 rule all:
     input:
-        op.join(WD, 'data', config['SRR'] + '_1.fastq.gz')
-
+        # op.join(WD, 'real_data', config['SRR'] + '_1.fastq.gz'),
+        # op.join(WD, 'real_data', config['SRR'] + '_2.fastq.gz'),
+        op.join(WD, 'annotation', op.basename(GTF)),
+        op.join(WD, 'genome', op.basename(GENOME)),
+        # op.join(WD, "simulation", config["SAMPLENAME"] + ".isoforms.results"),
+	# op.join(WD, "simulation", config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model")
+        expand("simulation/simulated_data/simulated_reads_{nr}.fq", nr = [1,2])
 
 # TODO chunk 1 start ---------------------        
 rule get_srr:
     output:
-        op.join(WD, 'data', config['SRR'] + '_1.fastq.gz'),
-        op.join(WD, 'data', config['SRR'] + '_2.fastq.gz')
+        one_un = temp(op.join(WD, 'real_data', config['SRR'] + '_1.fastq')),
+        two_un = temp(op.join(WD, 'real_data', config['SRR'] + '_2.fastq')),
+        tmp1 = op.join(WD, 'real_data', config['SRR'] + '_1.fastq.gz'),
+        tmp2 = op.join(WD, 'real_data', config['SRR'] + '_2.fastq.gz')
     params:
         srr = config['SRR'],
-        path = op.join(WD, 'data')
+        path = op.join(WD, 'real_data')
     log:
-        op.join(WD, 'data', config['SRR'] + '_retrieval.log')
+        op.join(WD, 'real_data', config['SRR'] + '_retrieval.log')
     shell:
         """
         mkdir -p {params.path}
         {FASTERQDUMP} {params.srr} &> {log}
+        pigz --keep {output.one_un}
+        pigz --keep {output.two_un}
         """
 
 rule get_GTF:
     output:
-        op.join(WD, 'annotation', GTF)
+        op.join(WD, 'annotation', op.basename(GTF))
     params:
         path = op.join(WD, 'annotation'),
         gtf_url = config['gtf_url']
     log:
-        op.join(WD, 'data', GTF + '_retrieval.log')
+        op.join(WD, 'annotation', GTF + '_retrieval.log')
     shell:
         """
         mkdir -p {params.path}
-        wget {params.gtf_url} &> {log}
+        
+        wget {params.gtf_url} -O {output} &> {log}
         """
 
-# rule get_genome:
-    
+rule get_genome:
+    output:
+        op.join(WD, 'genome', op.basename(GENOME))
+    params:
+        path = op.join(WD, 'genome'),
+        gtf_url = config['gtf_url']
+    log:
+        op.join(WD, 'genome', GTF + '_retrieval.log')
+    shell:
+        """
+        mkdir -p {params.path}
+        
+        wget {params.gtf_url} -O {output} &> {log}
+        """
+
+rule run_RSEM_simulation:
+    input:
+        expand('simulation/simulated_data/simulated_reads_{nr}.fq.gz',
+                       nr = [1,2]),
+        expand('{samplename}.stat/{samplename}.model',
+                       samplename = config["SAMPLENAME"])
+ 
+        
+## --- till here
+        
 ## not sure this is needed
 # rule create_R_environ:
 # TODO chunk 1 end ---------------------        

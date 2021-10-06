@@ -89,12 +89,12 @@ rule simulate_data:
 		model = "simulation/" + config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model_modified",
 		iso = "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
 	output: 
-		protected("simulation/simulated_data/simulated_reads_chr19_22_1.fq"),
-		protected("simulation/simulated_data/simulated_reads_chr19_22_2.fq"),
+		protected("simulation/simulated_data/simulated_reads_1.fq"),
+		protected("simulation/simulated_data/simulated_reads_2.fq"),
 	params:
 		rsemref = config["RSEMREF"],
 		theta = config["THETA"],
 		n_reads = config["N_READS"],
 		seed = config["SEED"]
 	shell:
-		"rsem-simulate-reads {params.rsemref} {input.model} {input.iso} {params.theta} {params.n_reads} simulation/simulated_data/simulated_reads_chr19_22 --seed {params.seed}"
+		"rsem-simulate-reads {params.rsemref} {input.model} {input.iso} {params.theta} {params.n_reads} simulation/simulated_data/simulated_reads --seed {params.seed}"

@@ -1,0 +1,22 @@
+#!snakemake -s
+
+# gets further software requirements outside conda
+#
+# Izaskun Mallona
+# 6 Oct 2021
+
+
+# next in exec chain is rule EQP_setup from quantification.snmk
+rule retrieve_eqp:
+    output:
+        op.join('third_party', 'EQP-QM', 'eqp-setup.sh')
+    params:
+        path=op.join('third_party')
+    conda:
+        op.join('envs', 'discerns_env.yaml')
+    shell:
+        """
+        mkdir -p {params.path}
+        cd {params.path}
+        git clone git@github.com:Novartis/EQP-QM.git
+        """

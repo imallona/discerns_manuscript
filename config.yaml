@@ -1,29 +1,47 @@
+cores: 20
+
 ## working directory
-WD: "~/discerns_manuscript"
+WD: "/home/imallona/discerns_manuscript"
+
+
+## hardcoded dependencies (?)
+# Izskun 06 Oct 2021: installed within conda
+hisat2_dir: /home/kathi/software/hisat2-2.1.0/
+
+##directory with the EQP scripts
+# Izskun 06 Oct 2021: installed locally
+# eqp: "/home/kathi/software/EQP-QM-master"
+eqp: "../third_party/EQP-QM"
 
 ## human RNA-seq sample for simulation
 ##--------------------------------------------------------------------------------------------
 
 SRR: "SRR3192428"
+SAMPLENAME:  "SRR3192428" ## Izaskun 5th Oct, @todo confirm this must be a SRR
 
+gtf_url: 'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.basic.annotation.gtf.gz'
 
+genome_url: 'http://ftp.ensembl.org/pub/release-104/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz'
 
-
-## <- checked till here ->
 
 
 ## data was downloaded from ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX160/SRX1603411/SRR3192428/
 ## GEO https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM2072377
-# FASTQ1: "real_data/SRR3192428_1.fastq.gz"
-# FASTQ2: "real_data/SRR3192428_2.fastq.gz"
+FASTQ1: "/home/imallona/discerns_manuscript/real_data/SRR3192428_1.fastq.gz"
+FASTQ2: "/home/imallona/discerns_manuscript/real_data/SRR3192428_2.fastq.gz"
 ## directory in which the reference genome fasta sequences are stored:
 ## Homo_sapiens.GRCh37.dna.chromosome.19.fa
 ## Homo_sapiens.GRCh37.dna.chromosome.22.fa
 GENOMEDIR: "genome/reference"
 ## prefix of the RSEM reference files
-RSEMREF: "reference/RSEM/hg19" # <- ??
+# RSEMREF: "reference/RSEM/hg19" # <- ??
+RSEMREF: "reference/RSEM/hg38" # <- ??
 ## name of the RNA-seq sample
 REALSAMPLE: "real_data/"
+
+## <- checked till here ->
+
+
 
 ## theta paramter for rsem-simulate-reads
 ## This parameter determines the fraction of reads  that  are  coming  from  background  "noise"  (instead  of  from  a transcript)
@@ -32,28 +50,27 @@ THETA: 0.05
 ## How many reads should be simulated?
 
 # N_READS: 1118017 # <- ?
+N_READS: 40000000
+
 ## the number of reads that were mapped to chromosome 19 and 22: 1118017
 ## 8306564 = number of reads = [348875684]/4*{1500+500}/(21000)        [lines in real fastq data] {genes in chr19 + chr22} / (total genes)
 
 ## seed for rsem-simulate-reads
 SEED: 584
 
-## Number of cores
-##--------------------------------------------------------------------------------------------
-cores: 20
-
 ## R setup
 Rbin: "/usr/local/R/R-4.1.0/bin/R"
 
-## Gene annotation file
-##--------------------------------------------------------------------------------------------
-gtf : "annotation/Homo_sapiens.GRCh37.85_chr19_22.gtf"
+# ## Gene annotation file
+# ##--------------------------------------------------------------------------------------------
+gtf : "annotation/gencode.v38.basic.annotation.gtf.gz"
 
 ## Mapping parameters
 ##--------------------------------------------------------------------------------------------
 
+## 
 genome:
-    "genome/reference/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
+    "genome/reference/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
 
 # chromosomes:
 #     - 19
@@ -99,11 +116,6 @@ tophat_param:
     default: ""
     microexons_search: "--microexon-search"
 
-hisat2_dir: /home/kathi/software/hisat2-2.1.0/
-
-
-##directory with the EQP scripts
-eqp: "/home/kathi/software/EQP-QM-master"
 
 ## directory with EQP setup files
 eqp_setup: "reference/EQP_setup"
