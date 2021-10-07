@@ -51,7 +51,9 @@ SAMPLENAME: "SRR3192428"
 ## This parameter determines the fraction of reads  that  are  coming  from  background  "noise"  (instead  of  from  a transcript)
 THETA: 0.05
 ## How many reads should be simulated?
-N_READS: 1118017 ## ???
+# N_READS: 1118017 ## ???
+N_READS: 50000000 ## rather, 50 millions, somewhat standard in RNAseq - any chromosome
+
 ## the number of reads that were mapped to chromosome 19 and 22: 1118017
 ## 8306564 = number of reads = [348875684]/4*{1500+500}/(21000)        [lines in real fastq data] {genes in chr19 + chr22} / (total genes)
 
@@ -61,7 +63,7 @@ SEED: 321
 ## Number of cores
 ##--------------------------------------------------------------------------------------------
 ## maximal number of cores to use
-cores: 12
+cores: 80
 
 
 chromosomes:

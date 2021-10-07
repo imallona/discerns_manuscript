@@ -5,6 +5,8 @@
 ##################
 
 rule prepare_reference:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         gtf = config['gtf'],
         genome = config['genome']
@@ -12,7 +14,8 @@ rule prepare_reference:
         refdir = config['RSEMREF'],
         gdir = config["GENOMEDIR"]
     output:
-        out = config["RSEMREF"] + ".n2g.idx.fa",
+        # out = config["RSEMREF"] + ".n2g.idx.fa",
+        out = config["RSEMREF"] + ".n2g.idx.fa.ti",
         uncomp_genome = temp(op.splitext(config['genome'])[0]),
         uncomp_gtf = temp(op.splitext(config['gtf'])[0]),
     threads:
@@ -34,21 +37,42 @@ rule prepare_reference:
 ## --> first read comes from the reverse strand: set --strandedness reverse
 
 rule calculate_expression:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         fa1 = config["FASTQ1"],
         fa2 = config["FASTQ2"]
     output: 
-        "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
-        "simulation/" + config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model"
+        o1 = op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"),
+        o2 = op.join("simulation/", config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model"),
+        fa1un = temp(op.splitext(config["FASTQ1"])[0]),
+        fa2un = temp(op.splitext(config["FASTQ2"])[0])       
     threads: 
         config["cores"]
     params:
         samplename = config["SAMPLENAME"],
         rsemref = config["RSEMREF"]
+    log:
+        op.join('logs', 'calculate_expression.log')
     shell:
-        "rsem-calculate-expression --paired-end {input.fa1} {input.fa2} {params.rsemref} simulation/{params.samplename} --strandedness reverse -p {threads} --star --gzipped-read-file"
-        #--fragment-lenth-min 200   --> should we set this parameter?
+        """
+        # rsem-calculate-expression  --paired-end {input.fa1} {input.fa2} \
+        #       {params.rsemref} simulation/{params.samplename} --strandedness reverse \
+        #       -p {threads} --star --gzipped-read-file &> {log}
+        # #--fragment-lenth-min 200   --> should we set this parameter?
 
+        pigz -p {threads} --uncompress --keep {input.fa1}
+        pigz -p {threads} --uncompress --keep {input.fa2}
+
+        rsem-calculate-expression --star \
+          --paired-end \
+          -p {threads} \
+          --strandedness reverse \
+          {output.fa1un} {output.fa2un} \
+          {params.rsemref} \
+          simulation/{params.samplename} &> {log}
+        """
+        
 #   ## ENCODE3 pipeline parameters, which are used by RSEM calculate-expression
 # " --genomeDir $star_genome_path " .
 # ' --outSAMunmapped Within ' .
@@ -67,6 +91,8 @@ rule calculate_expression:
 
 ### modify the RSEM model file (remove the probability of generating reads with quality 2 to prevent sampling of reads with overall low quality)
 rule parse_markov_prob:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input: 
         "simulation/{samplename}.stat/{samplename}.model"
     output: 
@@ -76,6 +102,8 @@ rule parse_markov_prob:
 
 
 rule modify_markov_prob:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input: 
         "simulation/{samplename}.stat/{samplename}_markov_prob"
     output: 
@@ -85,6 +113,8 @@ rule modify_markov_prob:
 
 
 rule modify_RSEM_model:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         model = "simulation/{samplename}.stat/{samplename}.model",
         modified_markov_prob = "simulation/{samplename}.stat/{samplename}_markov_prob_modified"
@@ -96,12 +126,14 @@ rule modify_RSEM_model:
         "sed -n '115,$p' {input} >> {output}"
 
 rule simulate_data:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input: 
         model = "simulation/" + config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model_modified",
         iso = "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
     output: 
-        protected("simulation/simulated_data/simulated_reads_1.fq"),
-        protected("simulation/simulated_data/simulated_reads_2.fq"),
+        protected(op.join("simulation", "simulated_data", "simulated_reads_1.fq")),
+        protected(op.join("simulation", "simulated_data", "simulated_reads_2.fq"))
     params:
         rsemref = config["RSEMREF"],
         theta = config["THETA"],

@@ -11,10 +11,11 @@ Projected/implemented
 - i (1 Sept): get rid of conda envs, just a virtenv and base R (4.1.0). Reason why: envs contains multiple R3.6 dependencies, which are tedious to update. Rather, use a virtenv with the most uptodate soft, then generate the env files (if any)
 - i 6 Oct: go back to conda, but with mamba
 - p (.): no downsampling to chr19 and 22, whole genome instead.
-- i (.): Most recent GTF and reference FASTA, gencode
-- i (.): add data download steps
-- i (.): make paths relative to the working directory WD, update 6 Oct: partial, to deal with hardoded paths
+- i 6 Oct: Most recent GTF and reference FASTA, gencode
+- i 6 Oct: add data download steps
+- i (.) : make paths relative to the working directory WD, update 6 Oct: partial, to deal with hardoded paths
 - p (.): estimate theta for RSEM using real data?
+- p (.), remove unused soft stacks, e.g. is tophat used anyway? this goes for featurecounts, tophat, salmon etc
 
 ## Run
 

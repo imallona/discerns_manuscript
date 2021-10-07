@@ -6,6 +6,8 @@
 ## Count exon truth
 
 rule exon_truth:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         gtf = config["gtf"],
         sim_iso_res = "simulation/simulated_data/simulated_reads_chr19_22.sim.isoforms.results",
@@ -24,6 +26,8 @@ rule exon_truth:
 ## Reduce exon annotation
 
 rule reduce_GTF:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         gtf = config["gtf"],
         truth = "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt"
@@ -38,6 +42,8 @@ rule reduce_GTF:
 
 
 rule removed_exons_truth:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         gtf = lambda wildcards: config["reduced_exons"][wildcards.removed_exon],
         truth = "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt"
@@ -59,6 +65,8 @@ rule removed_exons_truth:
 
 
 rule classify_removed_exons:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         removed = "simulation/reduced_GTF/removed_{removed_exon}_unique.txt"
     output:
@@ -68,6 +76,8 @@ rule classify_removed_exons:
 
 
 rule mapped_junction_count:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         removed = "simulation/reduced_GTF/removed_{removed_exon}_unique_classified.txt",
         bam = "simulation/mapping/STAR/{removed_exon}/{test_dirnames}/pass2_Aligned.out_s.bam"

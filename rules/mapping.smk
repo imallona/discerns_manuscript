@@ -26,6 +26,8 @@ def get_gtf(wildcards):
 ##################
 
 rule hisat2_extract_splice_sites:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input: 
         gtf = get_gtf
     output:
@@ -42,6 +44,8 @@ rule hisat2_extract_splice_sites:
 
 ## generate STAR gemome indices using the different reduced gtf files
 rule generate_star_index:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         # fasta = expand("{GENOMEDIR}{chr}.fa", GENOMEDIR=GENOMEDIR, chr = CHROMS),
         fasta = expand("{genomedir}Homo_sapiens.GRCh37.dna.chromosome.{chr}.fa", genomedir = config["GENOMEDIR"], chr = config["chromosomes"]),
@@ -58,6 +62,8 @@ rule generate_star_index:
 
 ### use Hisat2 because tophat2 is on low maintenance???
 rule generate_bowtie2_index:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         fasta = expand("{genomedir}Homo_sapiens.GRCh37.dna.chromosome.{chr}.fa", genomedir = config["GENOMEDIR"], chr = config["chromosomes"])
         # ",".join("{GENOMEDIR}*.fa")  ## how to join the fasta files with ,?
@@ -74,6 +80,8 @@ rule generate_bowtie2_index:
 
 
 rule mv_fasta_2_bowtie_index:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         fasta = expand("{genomedir}Homo_sapiens.GRCh37.dna.chromosome.{chr}.fa", genomedir = config["GENOMEDIR"], chr = config["chromosomes"]),
         bowtie_index = "reference/bowtie2/chr19_22/"
@@ -84,6 +92,8 @@ rule mv_fasta_2_bowtie_index:
 
 
 rule generate_hisat2_index:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         fasta = expand("{genomedir}Homo_sapiens.GRCh37.dna.chromosome.{chr}.fa", genomedir = config["GENOMEDIR"], chr = config["chromosomes"]),
         splicesites = "reference/hisat2/splicesites/{which_reduced_gtf}.txt"
@@ -110,6 +120,8 @@ def get_star_param(wildcards):
 
 ### we run 2 pass mapping for all parameters
 rule star_mapping:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         fastq1 = "simulation/simulated_data/simulated_reads_chr19_22_1.fq",
         fastq2 = "simulation/simulated_data/simulated_reads_chr19_22_2.fq",
@@ -147,6 +159,8 @@ def get_tophat_param(wildcards):
     return config["tophat_param"][wildcards.test_dirnames]  ## e.g. outSJfilterOverhangMin
 
 rule tophat_mapping:
+    conda:
+        op.join('envs', 'tophat_discerns_py27.yaml')
     input:
         "reference/bowtie2/chr19_22/",
         "reference/bowtie2/chr19_22/GRCh37.85_chr19_22.fa",
@@ -172,6 +186,8 @@ rule tophat_mapping:
         """
 
 rule hisat2_mapping:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
        "reference/hisat2/chr19_22/{which_reduced_gtf}/{which_reduced_gtf}_GRCh37.85_chr19_22.1.ht2",
         fastq1 = "simulation/simulated_data/simulated_reads_chr19_22_1.fq",
@@ -204,6 +220,8 @@ rule hisat2_mapping:
 ######################
 
 rule convert_bam:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         sam = "simulation/mapping/hisat2/{which_reduced_gtf}/hisat2.sam"
     output:
@@ -215,6 +233,8 @@ rule convert_bam:
 
 
 rule sort_bam:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         bam = "simulation/mapping/{which_reduced_gtf}/{bam_name}.bam",
     output:
@@ -226,6 +246,8 @@ rule sort_bam:
 
 
 rule index_bam:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
     input:
         bam = "simulation/mapping/{which_reduced_gtf}/{bam_name}_s.bam",
     output:

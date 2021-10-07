@@ -11,7 +11,7 @@ rule retrieve_eqp:
     output:
         op.join('third_party', 'EQP-QM', 'eqp-setup.sh')
     params:
-        path=op.join('third_party')
+        path = op.join('third_party')
     conda:
         op.join('envs', 'discerns_env.yaml')
     shell:
