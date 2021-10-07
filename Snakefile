@@ -34,7 +34,7 @@ print(op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"))
 rule all:
     input:
         'Rout/R_packages_install_state.txt',
-        config["RSEMREF"] + ".n2g.idx.fa.ti",
+        # config["RSEMREF"] + ".n2g.idx.fa",
         config["FASTQ2"],
         op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"),
         ## managed till here

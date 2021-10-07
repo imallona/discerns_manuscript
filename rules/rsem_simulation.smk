@@ -14,8 +14,8 @@ rule prepare_reference:
         refdir = config['RSEMREF'],
         gdir = config["GENOMEDIR"]
     output:
-        # out = config["RSEMREF"] + ".n2g.idx.fa",
-        out = config["RSEMREF"] + ".n2g.idx.fa.ti",
+        # out = config["RSEMREF"] # + ".n2g.idx.fa.idx.fa",
+        out = config["RSEMREF"] + ".n2g.idx.fa",
         uncomp_genome = temp(op.splitext(config['genome'])[0]),
         uncomp_gtf = temp(op.splitext(config['gtf'])[0]),
     threads:
@@ -30,7 +30,7 @@ rule prepare_reference:
        pigz -p {threads} --uncompress --keep {input.gtf}
 
        rsem-prepare-reference --gtf {output.uncomp_gtf} --star \
-       --star-sjdboverhang 100 -p {threads} {output.uncomp_genome} {output.out}  &> {log}
+       --star-sjdboverhang 100 -p {threads} {output.uncomp_genome} {params.refdir}  &> {log}
        """
                 
 ## we have paired-end stranded reads from Illumina HiSeq 2000 (stranded TruSeq libary preparation with dUTPs )
@@ -41,7 +41,8 @@ rule calculate_expression:
         op.join('envs', 'discerns_env.yaml')
     input:
         fa1 = config["FASTQ1"],
-        fa2 = config["FASTQ2"]
+        fa2 = config["FASTQ2"],
+        rsem = config['RSEMREF'] + '.n2g.idx.fa'
     output: 
         o1 = op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"),
         o2 = op.join("simulation/", config["SAMPLENAME"] + ".stat/" + config["SAMPLENAME"] + ".model"),
@@ -109,7 +110,7 @@ rule modify_markov_prob:
     output: 
         "simulation/{samplename}.stat/{samplename}_markov_prob_modified"
     script: 
-        "scripts/modify_RSEM_quality_score_distribution.R"
+        "../scripts/modify_RSEM_quality_score_distribution.R"
 
 
 rule modify_RSEM_model:
@@ -120,6 +121,8 @@ rule modify_RSEM_model:
         modified_markov_prob = "simulation/{samplename}.stat/{samplename}_markov_prob_modified"
     output: 
         "simulation/{samplename}.stat/{samplename}.model_modified"
+    threads:
+        1
     shell:
         "sed -n '1,13p;14q' {input.model} > {output} \n"
         "cat {input.modified_markov_prob} >> {output} \n"
@@ -134,14 +137,18 @@ rule simulate_data:
     output: 
         protected(op.join("simulation", "simulated_data", "simulated_reads_1.fq")),
         protected(op.join("simulation", "simulated_data", "simulated_reads_2.fq"))
+    log:
+        op.join('logs', 'simulate_data.log')
     params:
         rsemref = config["RSEMREF"],
         theta = config["THETA"],
         n_reads = config["N_READS"],
         seed = config["SEED"]
+    threads:
+        1
     shell:
         """
         rsem-simulate-reads {params.rsemref} {input.model} {input.iso} \
             {params.theta} {params.n_reads} simulation/simulated_data/simulated_reads \
-             --seed {params.seed}
+             --seed {params.seed} &> {log}
         """

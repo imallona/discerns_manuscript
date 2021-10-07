@@ -11,11 +11,8 @@
 
 
 
-def get_gtf(wildcards):
-    return config["reduced_gtf"][wildcards.which_reduced_gtf]  ## e.g. outSJfilterOverhangMin
 
 
-### TODO: if "reduced_gtf" if "original", return the path to the original GTF file
 
 
 
@@ -114,9 +111,6 @@ rule generate_hisat2_index:
 
 ############
 
-def get_star_param(wildcards):
-    return config["star_param"][wildcards.test_dirnames]  ## e.g. outSJfilterOverhangMin
-    # return "{SIMDIR}mapping/{test_dirnames}/{{sample}}_pass2.Aligned.out.bam"
 
 ### we run 2 pass mapping for all parameters
 rule star_mapping:
