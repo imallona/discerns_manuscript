@@ -20,7 +20,7 @@ GENOME = op.basename(config['genome_url'])
 include: op.join('rules', 'utils.snmk')
 include: op.join("rules", "rsem_simulation.smk")
 include: op.join('rules', 'further_soft_installs.snmk')
-include: "rules/reduce_GTF.smk"
+include: op.join("rules", "reduce_GTF.smk")
 # include: "rules/mapping_comparison.smk"
 # include: "rules/mapping.smk"
 # include: "rules/predict_novel_splicing_events.smk"
@@ -38,7 +38,8 @@ rule all:
         config["FASTQ2"],
         op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"),
         ## managed till here
-        op.join("simulation", 'simulated_data', "simulated_reads_1.fq")
+        op.join("simulation", 'simulated_data', "simulated_reads_1.fq"),
+        expand("simulation/analysis/removed_exon_truth/{removed_exon}_truth.txt", removed_exon = config["reduced_exons"])
         # "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
         # "simulation/" + config["SAMPLENAME"] + ".isoforms.results",
         # "simulation/" + config["SAMPLENAME"] + ".isoforms.results",
@@ -79,7 +80,7 @@ rule get_GTF:
     conda:
         op.join('envs', 'discerns_env.yaml')
     output:
-        op.join(WD, 'annotation', op.basename(GTF))
+        protected(op.join(WD, 'annotation', op.basename(GTF)))
     params:
         path = op.join(WD, 'annotation'),
         gtf_url = config['gtf_url']
@@ -98,7 +99,7 @@ rule get_genome:
     conda:
         op.join('envs', 'discerns_env.yaml')
     output:
-        gz = op.join(WD, 'genome', op.basename(GENOME)),
+        gz = protected(op.join(WD, 'genome', op.basename(GENOME))),
         uncomp = temp(op.join(WD, 'genome', op.splitext(op.basename(GENOME))[0])),        
     params:
         path = op.join(WD, 'genome'),
@@ -150,7 +151,7 @@ rule R_env_install:
 
 rule run_RSEM_simulation:
     input:
-        expand("simulation/simulated_data/simulated_reads_chr19_22_{nr}.fq", nr = [1,2]),
+        expand("simulation/simulated_data/simulated_reads_{nr}.fq", nr = [1,2]),
         expand("simulation/{samplename}.stat/{samplename}.model", samplename = config["SAMPLENAME"])
         
 
@@ -180,11 +181,11 @@ rule run_fastqc:
     conda:
         op.join('envs', 'discerns_env.yaml')
     input:
-        fastq1 = "simulation/simulated_data/simulated_reads_chr19_22_1.fq",
-        fastq2 = "simulation/simulated_data/simulated_reads_chr19_22_2.fq"
+        fastq1 = "simulation/simulated_data/simulated_reads_1.fq",
+        fastq2 = "simulation/simulated_data/simulated_reads_2.fq"
     output:
-        "simulation/fastqc/simulated_reads_chr19_22_1_fastqc.html",
-        "simulation/fastqc/simulated_reads_chr19_22_2_fastqc.html"
+        "simulation/fastqc/simulated_reads_1_fastqc.html",
+        "simulation/fastqc/simulated_reads_2_fastqc.html"
     shell:
         "fastqc -o simlation/fastqc/ {input.fastq1} {input.fastq2}"
 

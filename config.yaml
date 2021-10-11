@@ -40,7 +40,7 @@ FASTQ2: "/home/imallona/discerns_manuscript/real_data/SRR3192428_2.fastq.gz"
 GENOMEDIR: "/home/imallona/discerns_manuscript/genome"
 
 ## prefix of the RSEM reference files
-RSEMREF: "reference/RSEM/test_chr19_22"
+RSEMREF: "reference/RSEM/all_chr"
 
 ## name of the RNA-seq sample
 # REALSAMPLE: "/home/Shared/data/seq/microexon_simulation/microexon_study/real_data/"

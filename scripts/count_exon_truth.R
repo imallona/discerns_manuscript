@@ -12,7 +12,20 @@
 # READS_LENGTH <- 101
 # CORES<-25
 
+debug <- FALSE
+if (debug) {
+    SERVER <- NULL
+    GTF_FILE <-  '/home/imallona/discerns_manuscript/annotation/gencode.v38.basic.annotation.gtf.gz'
 
+    SIM_ISOFORMS_RESULTS <- 'simulation/simulated_data/simulated_reads.sim.isoforms.results'
+    FASTQ_FILE_READ1 <- 'simulation/simulated_data/simulated_reads_1.fq'
+    FASTQ_FILE_READ2 <- 'simulation/simulated_data/simulated_reads_2.fq'
+    OVERLAP <- 1
+    MAX_MIC_LENGTH <- Inf
+    OUTPUT_FILE <- '/home/imallona/tmp/exons_truth_all_exons.txt'
+    READS_LENGTH <- 101
+    CORES<-25
+}
 
 print(version)
 
@@ -39,6 +52,14 @@ sim.iso.res <- cbind(sim.iso.res,sid=1:nrow(sim.iso.res))
 library(rtracklayer)
 gtf <- import(GTF_FILE)
 gtf <- gtf[mcols(gtf)$type=='exon']
+
+## start needed to be run on Oct 2021 - izaskun
+shared_tx <- intersect(unique(gtf$transcript_id), unique(sim.iso.res$transcript_id))
+length(shared_tx)
+gtf <- gtf[gtf$transcript_id %in% shared_tx,]
+sim.iso.res <- sim.iso.res[sim.iso.res$transcript_id %in% shared_tx,]
+# end izaskun
+
 mcols(gtf)$sid <- merge(as.data.frame(gtf),sim.iso.res[,c('transcript_id','sid')],by='transcript_id',sort=F)$sid   # Adding the matecolumn sid
 
 

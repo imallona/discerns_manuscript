@@ -48,8 +48,12 @@ conda list | grep r-base
 mamba repoquery depends star -c bioconda 
 mamba install star -c bioconda
 
-mamba repoquery depends rsem -c bioconda 
-mamba install rsem -c bioconda
+mamba repoquery depends rsem -c bioconda
+## the 1.3.3 has this issue https://github.com/deweylab/RSEM/issues/145
+# mamba install rsem -c bioconda
+# mamba install bioconda/label/cf201901 rsem
+mamba install rsem=1.3.2 -c bioconda
+    
 conda list | grep r-base ## still 4.1
 
 mamba install bowtie2 -c bioconda
@@ -89,3 +93,21 @@ mamba install -c conda-forge -c bioconda snakemake
 
 ## outer discerns_env
 conda deactivate
+
+
+## notice rsem does not work properly using conda, e.g. https://github.com/deweylab/RSEM/issues/145
+## even in version 1.3.2. Installing it manually
+
+mkdir ~/soft/rsem
+cd $_
+wget https://github.com/deweylab/RSEM/archive/refs/tags/v1.3.3.tar.gz
+
+tar xzvf v1.3.3.tar.gz
+cd RSEM-1.3.3
+
+
+make install DESTDIR=/home/imallona/soft/rsem prefix=
+export PATH=/home/imallona/soft/rsem/bin:"$PATH"
+
+echo $PATH
+# /home/imallona/soft/rsem/bin:/home/imallona/miniconda3/envs/discerns_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bi

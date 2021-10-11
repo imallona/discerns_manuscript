@@ -10,7 +10,7 @@ print(outtxt)
 pkgs.use <- list(cran = c("dplyr","ggplot2", "tidyr", "stringr", "data.table",
                           "devtools", "hexbin"),
                  bioconductor = c("rtracklayer", "GenomicAlignments", 
-                                  "Rsamtools"))
+                                  "Rsamtools", "ShortRead"))
                  # github = c("tximeta"))
 
 # gitLink <- c("mikelove/tximeta")

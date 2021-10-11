@@ -10,15 +10,17 @@ rule exon_truth:
         op.join('envs', 'discerns_env.yaml')
     input:
         gtf = config["gtf"],
-        sim_iso_res = "simulation/simulated_data/simulated_reads_chr19_22.sim.isoforms.results",
-        fastq1 = "simulation/simulated_data/simulated_reads_chr19_22_1.fq",
-        fastq2 = "simulation/simulated_data/simulated_reads_chr19_22_2.fq"
+        sim_iso_res = "simulation/simulated_data/simulated_reads.sim.isoforms.results",
+        fastq1 = "simulation/simulated_data/simulated_reads_1.fq",
+        fastq2 = "simulation/simulated_data/simulated_reads_2.fq"
+    log:
+        rlog = op.join('logs', 'count_exons_truth.log')
     output:
-        "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt"
+        "simulation/analysis/GRCh37.85_all_exon_truth.txt"
     threads: 
         config["cores"]
     script:
-        "scripts/count_exon_truth.R"
+        "../scripts/count_exon_truth.R"
 
 
 
@@ -30,7 +32,7 @@ rule reduce_GTF:
         op.join('envs', 'discerns_env.yaml')
     input:
         gtf = config["gtf"],
-        truth = "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt"
+        truth = "simulation/analysis/GRCh37.85_all_exon_truth.txt"
     output:
         expand("simulation/reduce_GTF/removed_{removed_exon}_unique.txt", removed_exon = config["reduced_exons"]),
         list(config["reduced_exons"].values()),
@@ -46,7 +48,7 @@ rule removed_exons_truth:
         op.join('envs', 'discerns_env.yaml')
     input:
         gtf = lambda wildcards: config["reduced_exons"][wildcards.removed_exon],
-        truth = "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt"
+        truth = "simulation/analysis/GRCh37.85_all_exon_truth.txt"
     output:
         outfile = "simulation/analysis/removed_exon_truth/{removed_exon}_truth.txt"
     script:
@@ -56,7 +58,7 @@ rule removed_exons_truth:
 # rule removed_exons_table:
 #     input:
 #         removed_gtf = lambda wildcards: config["reduced_exons"][wildcards.removed_exon],
-#         truth = "simulation/analysis/GRCh37.85_chr19_22_all_exon_truth.txt",
+#         truth = "simulation/analysis/GRCh37.85_all_exon_truth.txt",
 #         reduced_gtf = lambda wildcards: config["reduced_gtf"][wildcards.removed_exon]
 #     output:
 #         "simulation/analysis/removed_exon_truth/removed_{removed_exon}_summary_table.txt"
