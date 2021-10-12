@@ -1,10 +1,10 @@
+#!/usr/bin/env R
+
 #### This script removes some exons from a given gtf file. It makes sure that all removed exons are expressed (TPM > 0).
 ## It keeps track of the removed exons and the transcripts in which the exons occurred.
 ## The output is a reduced GTF file with missing exons (microexon, normal exons or both). Some of the removed exons are unique, and some do overlap with other exons (more complicated to discover).
 ## @ author: Katharina Hembach
 ## 25.10.2017
-
-
 
 GTF <- snakemake@input[["gtf"]]
 EXPR <- snakemake@input[["truth"]]
@@ -28,12 +28,21 @@ OUTDIR <- dirname(OUTFILE_ME)
 # OUTFILE_EXON <- "test_reduce_gtf/GRCh37.85_chr19_22_reduced_exon.gtf"
 # OUTFILE_ME_EXON <- "test_reduce_gtf/GRCh37.85_chr19_22_reduced_me_exon.gtf"
 
-
-
 # OUTDIR <- "test_reduce_gtf"
 # OUTDIR <- "simulation/reduced_GTF/"
 
 
+debug <- FALSE
+if (debug) {
+    GTF <- "/home/imallona/discerns_manuscript/annotation/gencode.v38.basic.annotation.gtf.gz"
+    EXPR <- '/home/imallona/src/discerns_manuscript/simulation/analysis/GRCh37.85_all_exon_truth.txt'
+
+    OUTFILE_ME <- "test_reduced_me.gtf"
+    OUTFILE_EXON <- "test_reduced_exon.gtf"
+    OUTFILE_ME_EXON <- "test_reduced_me_exon.gtf"
+
+    OUTDIR <- "test_reduce_gtf"
+}
 
 
 
@@ -49,19 +58,30 @@ gtf <- import(GTF)
 expr <- read.table(EXPR, header = TRUE)
 
 # we filter out all exons that are not "normal" exons in a transcript, because we don't want short annotations such as start codons
-not_exons <- gtf[mcols(gtf)$type %in% c("start_codon", "stop_codon", "Selenocysteine", "five_prime_utr", "three_prime_utr")]
+# not_exons <- gtf[mcols(gtf)$type %in% c("start_codon", "stop_codon", "Selenocysteine", "five_prime_utr", "three_prime_utr")]
+## instead of that (original by Kathi), restrict to exons - Izaskun
+## @todo check why was it like that;
+## at least in gencode UTRs are UTRs, not three_prime_utr and five_prime_utr
+not_exons <- gtf[! mcols(gtf)$type %in% "exon"]
 
 exons <- subsetByOverlaps(gtf, not_exons, type = "equal", invert = TRUE)
-exons <- exons[mcols(exons)$type == "exon" & mcols(exons)$gene_biotype == "protein_coding"] # only keep exons from protein coding transcripts (remove retained introns, antisense transcripts, ...)
+## table(mcols(gtf)$type, mcols(gtf)$gene_type)
+
+exons <- exons[mcols(exons)$type == "exon" & mcols(exons)$gene_type == "protein_coding"] # only keep exons from protein coding transcripts (remove retained introns, antisense transcripts, ...)
 mcols(exons)$count_reads <- expr[subjectHits(findOverlaps(exons, GRanges(expr), type = "equal")) , "count_reads" ]  ## add the simulated counts per exon
 
+## Izaskun 12 oct 2021, @todo check what are these hardcoded stuff!?
+## me <- exons[width(exons)<28 & width(exons)>=3,] ##845 unique microexons
+## me_expressed <- me[mcols(me)$count_reads >0,] 
+## me_expressed_unique <- unique(me_expressed) ##176 unique expressed me, count_reads>0
 
-me <- exons[width(exons)<28 & width(exons)>=3,] ##845 unique microexons
+
+me <- exons[width(exons)<28 & width(exons)>=3,] ##353
 me_expressed <- me[mcols(me)$count_reads >0,] 
-me_expressed_unique <- unique(me_expressed) ##176 unique expressed me, count_reads>0
+me_expressed_unique <- unique(me_expressed) ##104 unique expressed me, count_reads>0
 
 normal_exons <- unique(exons[width(exons)>=28,])
-exons_expressed <- normal_exons[mcols(normal_exons)$count_reads >1,] ##16258 unique expressed exons (>27nt) with TPM>0
+exons_expressed <- normal_exons[mcols(normal_exons)$count_reads >0,] ##55345 unique expressed exons (>27nt) with TPM>0
 exons_expressed_unique <- unique(exons_expressed)
 # only keep the exons that are in the middle of a transcript
 # get all exons per transcript and remove the first and last ones

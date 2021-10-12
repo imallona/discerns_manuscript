@@ -9,7 +9,8 @@ print(outtxt)
 # =============== list all the packages =================
 pkgs.use <- list(cran = c("dplyr","ggplot2", "tidyr", "stringr", "data.table",
                           "devtools", "hexbin"),
-                 bioconductor = c("rtracklayer", "GenomicAlignments", 
+                 bioconductor = c("rtracklayer", "GenomicAlignments",
+                                  "GenomicFeatures",
                                   "Rsamtools", "ShortRead"))
                  # github = c("tximeta"))
 

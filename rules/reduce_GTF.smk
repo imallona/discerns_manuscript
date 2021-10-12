@@ -18,7 +18,7 @@ rule exon_truth:
     output:
         "simulation/analysis/GRCh37.85_all_exon_truth.txt"
     threads: 
-        config["cores"]
+        10 # config["cores"] # this is extremely memory hungry
     script:
         "../scripts/count_exon_truth.R"
 
