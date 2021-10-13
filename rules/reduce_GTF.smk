@@ -34,7 +34,7 @@ rule reduce_GTF:
         gtf = config["gtf"],
         truth = "simulation/analysis/GRCh37.85_all_exon_truth.txt"
     output:
-        expand("simulation/reduce_GTF/removed_{removed_exon}_unique.txt", removed_exon = config["reduced_exons"]),
+        expand("simulation/reduced_GTF/removed_{removed_exon}_unique.txt", removed_exon = config["reduced_exons"]),
         list(config["reduced_exons"].values()),
         me = config["reduced_gtf"]["me"],
         exon = config["reduced_gtf"]["exon"],

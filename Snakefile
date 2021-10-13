@@ -17,19 +17,16 @@ WD = config['WD']
 GTF = op.basename(config['gtf_url'])
 GENOME = op.basename(config['genome_url'])
 
+include: op.join('rules', 'get_data.snmk')
 include: op.join('rules', 'utils.snmk')
 include: op.join("rules", "rsem_simulation.smk")
 include: op.join('rules', 'further_soft_installs.snmk')
 include: op.join("rules", "reduce_GTF.smk")
-# include: "rules/mapping_comparison.smk"
-# include: "rules/mapping.smk"
+include: "rules/mapping_comparison.smk"
+include: "rules/mapping_ONGOING.snmk"
 # include: "rules/predict_novel_splicing_events.smk"
 # include: "rules/quantification.smk"
 include: "rules/mapping_real_data.smk"
-
-# print(config['gtf'])
-# print(config['RSEMREF'])
-print(op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"))
 
 rule all:
     input:
@@ -39,109 +36,9 @@ rule all:
         op.join("simulation", config["SAMPLENAME"] + ".isoforms.results"),
         ## managed till here
         op.join("simulation", 'simulated_data', "simulated_reads_1.fq"),
-        expand("simulation/analysis/removed_exon_truth/{removed_exon}_truth.txt", removed_exon = config["reduced_exons"])
-        # "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
-        # "simulation/" + config["SAMPLENAME"] + ".isoforms.results",
-        # "simulation/" + config["SAMPLENAME"] + ".isoforms.results",
-         # expand("simulation/simulated_data/simulated_reads_chr19_22_{nr}.fq", nr = [1,2])
-        
-        # expand("simulation/analysis/removed_exon_truth/{removed_exon}_truth.txt", removed_exon = config["reduced_exons"])
-        # "simulation/" + config["SAMPLENAME"] + ".isoforms.results"
-        # "simulation/simulated_data/simulated_reads_1.fq"
-
-        
-# TODO chunk 1 start ---------------------        
-rule get_srr:
-    conda:
-        op.join('envs', 'discerns_env.yaml')
-    output:
-        one_un = temp(op.join(WD, 'real_data', config['SRR'] + '_1.fastq')),
-        two_un = temp(op.join(WD, 'real_data', config['SRR'] + '_2.fastq')),
-        tmp1 = protected(op.join(WD, 'real_data', config['SRR'] + '_1.fastq.gz')),
-        tmp2 = protected(op.join(WD, 'real_data', config['SRR'] + '_2.fastq.gz'))
-    params:
-        srr = config['SRR'],
-        path = op.join(WD, 'real_data')
-    threads:
-        5
-    log:
-        op.join(WD, 'real_data', config['SRR'] + '_retrieval.log')
-    shell:
-        """
-        mkdir -p {params.path}
-        cd {params.path}
-        prefetch {params.srr} &> {log}
-        fasterq-dump {params.srr} &>> {log}
-        pigz --keep {output.one_un}
-        pigz --keep {output.two_un}
-        """
-
-rule get_GTF:
-    conda:
-        op.join('envs', 'discerns_env.yaml')
-    output:
-        protected(op.join(WD, 'annotation', op.basename(GTF)))
-    params:
-        path = op.join(WD, 'annotation'),
-        gtf_url = config['gtf_url']
-    log:
-        op.join('logs', GTF + '_retrieval.log')
-    threads:
-        1
-    shell:
-        """
-        mkdir -p {params.path}
-        
-        wget {params.gtf_url} -O {output} &> {log}
-        """
-
-rule get_genome:
-    conda:
-        op.join('envs', 'discerns_env.yaml')
-    output:
-        gz = protected(op.join(WD, 'genome', op.basename(GENOME))),
-        uncomp = temp(op.join(WD, 'genome', op.splitext(op.basename(GENOME))[0])),        
-    params:
-        path = op.join(WD, 'genome'),
-        genome_url = config['genome_url']
-    log:
-        op.join('logs', 'genome', GTF + '_retrieval.log')
-    threads:
-        5
-    shell:
-        """
-        mkdir -p {params.path}
-        
-        wget {params.genome_url} -O {output.gz} &> {log}
-
-        ## chrfy-it
-        pigz -p {threads} --uncompress {output.gz}
-        sed -i 's/>/>chr/g' {output.uncomp}
-
-        ## in my hands, pigz segfaults (?)
-        # pigz -p {threads} --compress --keep {output.uncomp}
-        gzip --keep {output.uncomp}
-        """
-        
-## Install the required R packages into the environment     
-rule R_env_install:
-    conda:
-        op.join('envs', 'discerns_env.yaml')
-    input:
-        script = "scripts/install_R_packages.R"
-    output:
-        "Rout/R_packages_install_state.txt"
-    log:
-        "Rout/install_R_packages.Rout"
-    conda:
-        # "envs/r_scripts.yaml"
-        "envs/discerns_env.yaml"
-    threads:
-        1
-    shell:
-        '''R CMD BATCH --no-restore --no-save "--args outtxt='{output}' " {input.script} {log}'''
-
-
+        "simulation/reduced_GTF/reduced_me.gtf",
+        expand("reference/hisat2/splicesites/{which_reduced_gtf}.txt",
+                which_reduced_gtf = config['reduced_gtf'])
 
 ##################
 

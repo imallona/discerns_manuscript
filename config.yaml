@@ -37,7 +37,8 @@ FASTQ2: "/home/imallona/discerns_manuscript/real_data/SRR3192428_2.fastq.gz"
 ## Homo_sapiens.GRCh37.dna.chromosome.19.fa
 ## Homo_sapiens.GRCh37.dna.chromosome.22.fa
 # GENOMEDIR: "/home/Shared/data/seq/microexon_simulation/microexon_study/genome/reference/"
-GENOMEDIR: "/home/imallona/discerns_manuscript/genome"
+## mind the end '/', sometimes the dir is string-concatenated as-is
+GENOMEDIR: "/home/imallona/discerns_manuscript/genome/"
 
 ## prefix of the RSEM reference files
 RSEMREF: "reference/RSEM/all_chr"
@@ -96,9 +97,9 @@ simulation_name: 'simulated_reads_chrall'
 
 ## gtf files with reduced mes / exons
 reduced_gtf:
-    me: "simulation/reduced_GTF/GRCh37.85_chr19_22_reduced_me.gtf"
-    exon: "simulation/reduced_GTF/GRCh37.85_chr19_22_reduced_exon.gtf"
-    me_exon: "simulation/reduced_GTF/GRCh37.85_chr19_22_reduced_me_exon.gtf"
+    me: "simulation/reduced_GTF/reduced_me.gtf"
+    exon: "simulation/reduced_GTF/reduced_exon.gtf"
+    me_exon: "simulation/reduced_GTF/reduced_me_exon.gtf"
 
 ## gtf files of the removed mes / exons
 reduced_exons:
@@ -133,7 +134,8 @@ tophat_param:
     microexons_search: "--microexon-search"
 
 # hisat2_dir: /home/kathi/software/hisat2-2.1.0/
-hisat2_dir: /home/imallona/miniconda3/envs/discerns_env/bin
+## mind the end `/`, the path is concatenated as is within the code
+hisat2_dir: /home/imallona/miniconda3/envs/discerns_env/bin/
 
 
 ##directory with the EQP scripts
