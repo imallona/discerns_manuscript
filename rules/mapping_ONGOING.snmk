@@ -1,0 +1,35 @@
+### Rules for mapping with STAR and tophat
+
+##################
+
+# Run read mapping
+
+##################
+## STAR version STAR_2.5.3a
+#### use STAR wrapper!?
+### write wrapper for index creation!?
+
+
+
+
+
+
+
+
+####################
+
+# Preprocessing
+
+##################
+
+rule hisat2_extract_splice_sites:
+    conda:
+        op.join('envs', 'discerns_env.yaml')
+    input: 
+        gtf = get_gtf
+    output:
+        "reference/hisat2/splicesites/{which_reduced_gtf}.txt"
+    shell:
+        "python " + config["hisat2_dir"] + "hisat2_extract_splice_sites.py {input.gtf} > {output}"
+
+        
