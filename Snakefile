@@ -38,8 +38,18 @@ rule all:
         op.join("simulation", 'simulated_data', "simulated_reads_1.fq"),
         "simulation/reduced_GTF/reduced_me.gtf",
         expand("reference/hisat2/splicesites/{which_reduced_gtf}.txt",
-                which_reduced_gtf = config['reduced_gtf'])
-
+                which_reduced_gtf = config['reduced_gtf']),
+        expand("reference/STAR/all_chr/{which_reduced_gtf}/SAindex",
+               which_reduced_gtf = config['reduced_gtf']),
+        "reference/bowtie2/all_chr/all_chr.rev.2.bt2",
+        expand("reference/hisat2/all_chr/{which_reduced_gtf}/{which_reduced_gtf}_all_chr.1.ht2",
+               which_reduced_gtf = config['reduced_gtf']),
+        expand("simulation/mapping/STAR/{which_reduced_gtf}/{test_dirnames}/SJ.out.tab",
+               which_reduced_gtf = config["reduced_gtf"], test_dirnames = config["star_param"]),
+        config["reduced_gtf"]["me"]
+        
+        # expand("reference/hisat2/all_chr/{which_reduced_gtf}/{which_reduced_gtf}_all_chr.1.ht2",
+        #        which_reduced_gtf = config['reduced_gtf'])
 ##################
 
 # RSEM
